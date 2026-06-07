@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>3DS Performance — Summer Enrollment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@500;600;700&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0b0f19;
+    --panel:#111827;
+    --panel-2:#161f31;
+    --red:#e11d2a;
+    --red-deep:#991b1b;
+    --line:rgba(255,255,255,.10);
+    --muted:#9aa6bd;
+    --text:#eef2f9;
+    --white:#ffffff;
+    --gold:#f5b301;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;}
+
+  html{scroll-behavior:smooth;}
+
+  body{
+    font-family:'Sora',sans-serif;
+    background:var(--ink);
+    color:var(--text);
+    line-height:1.5;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- atmosphere ---------- */
+  .bg-fx{
+    position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(900px 600px at 85% -5%, rgba(225,29,42,.20), transparent 60%),
+      radial-gradient(700px 500px at -10% 110%, rgba(225,29,42,.12), transparent 55%),
+      linear-gradient(180deg,#0b0f19 0%,#0a0d16 100%);
+  }
+  .bg-fx::after{
+    content:"";position:absolute;inset:0;
+    background-image:repeating-linear-gradient(115deg,rgba(255,255,255,.025) 0 2px,transparent 2px 26px);
+    mask-image:linear-gradient(180deg,transparent,#000 25%,#000 75%,transparent);
+  }
+
+  .wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:0 22px;}
+
+  /* ---------- hero ---------- */
+  header.hero{padding:64px 0 30px;text-align:center;}
+  .kicker{
+    font-family:'Barlow Condensed',sans-serif;
+    letter-spacing:.32em;text-transform:uppercase;
+    font-weight:600;font-size:14px;color:var(--red);
+    display:inline-block;margin-bottom:14px;
+  }
+  h1.brand{
+    font-family:'Anton',sans-serif;
+    font-size:clamp(54px,12vw,116px);
+    line-height:.86;letter-spacing:.5px;text-transform:uppercase;
+    color:var(--white);
+    text-shadow:0 0 40px rgba(225,29,42,.25);
+  }
+  h1.brand span{color:var(--red);}
+  .tagline{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:600;text-transform:uppercase;letter-spacing:.12em;
+    font-size:clamp(16px,3.4vw,24px);
+    color:var(--text);margin-top:16px;
+  }
+  .meta{
+    margin-top:14px;color:var(--muted);font-size:14px;
+    display:flex;gap:18px;justify-content:center;flex-wrap:wrap;
+  }
+  .meta b{color:var(--text);font-weight:600;}
+
+  /* ---------- gym notice ---------- */
+  .notice{
+    margin:30px auto 8px;max-width:760px;
+    border:1px solid rgba(245,179,1,.35);
+    background:linear-gradient(180deg,rgba(245,179,1,.08),rgba(245,179,1,.03));
+    border-radius:14px;padding:14px 18px;display:flex;gap:13px;align-items:flex-start;
+  }
+  .notice .dot{flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:var(--gold);margin-top:7px;box-shadow:0 0 12px var(--gold);}
+  .notice p{font-size:13.5px;color:#f4e7c4;}
+  .notice b{color:var(--gold);}
+
+  /* ---------- toggle ---------- */
+  .toggle-row{display:flex;justify-content:center;margin:34px 0 10px;}
+  .toggle{
+    display:inline-flex;background:var(--panel);border:1px solid var(--line);
+    border-radius:999px;padding:5px;gap:4px;position:relative;
+  }
+  .toggle button{
+    font-family:'Barlow Condensed',sans-serif;font-weight:600;
+    text-transform:uppercase;letter-spacing:.08em;font-size:15px;
+    color:var(--muted);background:transparent;border:0;cursor:pointer;
+    padding:10px 22px;border-radius:999px;transition:color .25s;z-index:1;
+  }
+  .toggle button.active{color:var(--white);}
+  .toggle .glide{
+    position:absolute;top:5px;left:5px;height:calc(100% - 10px);
+    width:calc(50% - 5px);background:linear-gradient(180deg,var(--red),var(--red-deep));
+    border-radius:999px;transition:transform .3s cubic-bezier(.4,1.3,.5,1);
+    box-shadow:0 6px 18px rgba(225,29,42,.4);
+  }
+  .toggle.full .glide{transform:translateX(100%);}
+  .save-hint{text-align:center;color:var(--muted);font-size:12.5px;margin-bottom:30px;min-height:16px;}
+
+  /* ---------- cards ---------- */
+  .grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding-bottom:20px;
+  }
+  @media(max-width:980px){.grid{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:560px){.grid{grid-template-columns:1fr;}}
+
+  .card{
+    position:relative;background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid var(--line);border-radius:18px;padding:24px 20px 22px;
+    display:flex;flex-direction:column;
+    opacity:0;transform:translateY(26px);
+    animation:rise .6s cubic-bezier(.2,.7,.3,1) forwards;
+    transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease;
+  }
+  .card:hover{transform:translateY(-6px);border-color:rgba(225,29,42,.45);box-shadow:0 18px 40px rgba(0,0,0,.45);}
+  .card:nth-child(1){animation-delay:.05s;}
+  .card:nth-child(2){animation-delay:.13s;}
+  .card:nth-child(3){animation-delay:.21s;}
+  .card:nth-child(4){animation-delay:.29s;}
+  @keyframes rise{to{opacity:1;transform:translateY(0);}}
+
+  .card.featured{
+    border-color:var(--red);
+    background:linear-gradient(180deg,#1b1320,#161f31);
+    box-shadow:0 0 0 1px rgba(225,29,42,.4),0 20px 50px rgba(225,29,42,.12);
+  }
+  .badge{
+    position:absolute;top:-12px;left:50%;transform:translateX(-50%);
+    background:linear-gradient(180deg,var(--red),var(--red-deep));color:#fff;
+    font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.12em;
+    text-transform:uppercase;font-size:11.5px;padding:5px 14px;border-radius:999px;white-space:nowrap;
+    box-shadow:0 6px 16px rgba(225,29,42,.45);
+  }
+
+  .pkg-name{
+    font-family:'Anton',sans-serif;text-transform:uppercase;letter-spacing:.5px;
+    font-size:25px;line-height:1;color:var(--white);margin-bottom:6px;
+  }
+  .pkg-sub{
+    font-family:'Barlow Condensed',sans-serif;font-weight:600;text-transform:uppercase;
+    letter-spacing:.08em;font-size:14px;color:var(--red);margin-bottom:18px;
+  }
+
+  .price-block{margin-bottom:4px;display:flex;align-items:baseline;gap:6px;}
+  .price{font-family:'Anton',sans-serif;font-size:42px;line-height:1;color:var(--white);}
+  .price .cur{font-size:22px;vertical-align:super;color:var(--muted);}
+  .per{font-family:'Barlow Condensed',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-size:14px;}
+  .alt-price{font-size:12.5px;color:var(--muted);margin-bottom:18px;min-height:18px;}
+  .alt-price b{color:var(--text);font-weight:600;}
+
+  ul.feat{list-style:none;display:flex;flex-direction:column;gap:9px;margin:6px 0 22px;}
+  ul.feat li{position:relative;padding-left:24px;font-size:13.5px;color:#cdd6e6;}
+  ul.feat li::before{
+    content:"";position:absolute;left:0;top:6px;width:13px;height:8px;
+    border-left:2px solid var(--red);border-bottom:2px solid var(--red);
+    transform:rotate(-45deg);
+  }
+  ul.feat li b{color:var(--white);font-weight:600;}
+
+  .cta{
+    margin-top:auto;display:block;text-align:center;text-decoration:none;
+    font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase;
+    letter-spacing:.1em;font-size:16px;color:#fff;
+    background:linear-gradient(180deg,var(--red),var(--red-deep));
+    padding:14px 16px;border-radius:11px;transition:transform .15s,box-shadow .25s,filter .2s;
+    box-shadow:0 8px 22px rgba(225,29,42,.3);
+  }
+  .cta:hover{transform:translateY(-2px);filter:brightness(1.08);box-shadow:0 12px 28px rgba(225,29,42,.45);}
+  .card:not(.featured) .cta{background:linear-gradient(180deg,#26324a,#1b2438);box-shadow:none;border:1px solid var(--line);}
+  .card:not(.featured) .cta:hover{border-color:var(--red);background:linear-gradient(180deg,var(--red),var(--red-deep));}
+
+  /* ---------- footer ---------- */
+  footer{margin-top:36px;border-top:1px solid var(--line);padding:30px 0 60px;color:var(--muted);font-size:12.5px;}
+  footer .fnote{max-width:760px;margin:0 auto 10px;text-align:center;}
+  footer b{color:var(--text);}
+  .pay-secure{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:18px;color:var(--muted);font-size:12px;}
+  .pay-secure svg{width:14px;height:14px;fill:var(--muted);}
+</style>
+</head>
+<body>
+<div class="bg-fx"></div>
+
+<div class="wrap">
+  <header class="hero">
+    <span class="kicker">Summer Speed &amp; Power Program</span>
+    <h1 class="brand">3DS <span>Performance</span></h1>
+    <div class="tagline">Train Speed. Build Power. Transfer It To Sport.</div>
+    <div class="meta">
+      <span><b>@3ds_performance</b></span>
+      <span>Wesley Chapel, FL</span>
+      <span>8-Week Summer Block</span>
+    </div>
+  </header>
+
+  <div class="notice">
+    <span class="dot"></span>
+    <p>To train in the facility, every athlete also signs up for the <b>morning fitness gym membership ($40/mo)</b> directly with the gym. That membership is separate from the training packages below and is paid to the gym, not to 3DS.</p>
+  </div>
+
+  <div class="toggle-row">
+    <div class="toggle" id="toggle">
+      <span class="glide"></span>
+      <button class="active" data-mode="monthly">Monthly</button>
+      <button data-mode="full">Pay In Full</button>
+    </div>
+  </div>
+  <div class="save-hint" id="saveHint">Billed monthly through the summer block.</div>
+
+  <div class="grid" id="grid">
+    <!-- Speed + Strength -->
+    <div class="card"
+         data-monthly="29900" data-full="59800"
+         data-link-monthly="https://buy.stripe.com/8x27sD7lZ0m47lu0FI1B60p"
+         data-link-full="https://buy.stripe.com/9B63cn35JfgY35e2NQ1B60o">
+      <div class="pkg-name">Speed +<br>Strength</div>
+      <div class="pkg-sub">3 Gym + 1 Speed / Week</div>
+      <div class="price-block"><span class="price"><span class="cur">$</span><span class="amt">299</span></span><span class="per per-txt">/ mo</span></div>
+      <div class="alt-price alt-txt">or <b>$598</b> paid in full</div>
+      <ul class="feat">
+        <li><b>3</b> gym strength &amp; power sessions / wk</li>
+        <li><b>1</b> speed session / wk</li>
+        <li>Force production &amp; sprint mechanics</li>
+        <li>Specialty Lab access optional</li>
+      </ul>
+      <a class="cta" target="_blank" rel="noopener" href="https://buy.stripe.com/8x27sD7lZ0m47lu0FI1B60p">Enroll Now</a>
+    </div>
+
+    <!-- Development -->
+    <div class="card"
+         data-monthly="39900" data-full="79800"
+         data-link-monthly="https://buy.stripe.com/cNieV57lZ5GobBK0FI1B60r"
+         data-link-full="https://buy.stripe.com/dRm7sD6hVc4MgW49ce1B60q">
+      <div class="pkg-name">Develop&shy;ment</div>
+      <div class="pkg-sub">3 Gym + 2 Speed / Week</div>
+      <div class="price-block"><span class="price"><span class="cur">$</span><span class="amt">399</span></span><span class="per per-txt">/ mo</span></div>
+      <div class="alt-price alt-txt">or <b>$798</b> paid in full</div>
+      <ul class="feat">
+        <li><b>3</b> gym sessions / wk</li>
+        <li><b>2</b> speed sessions / wk</li>
+        <li><b>1</b> Specialty Lab credit / mo</li>
+        <li>Acceleration &amp; max-velocity work</li>
+      </ul>
+      <a class="cta" target="_blank" rel="noopener" href="https://buy.stripe.com/cNieV57lZ5GobBK0FI1B60r">Enroll Now</a>
+    </div>
+
+    <!-- Performance (featured) -->
+    <div class="card featured"
+         data-monthly="49900" data-full="99800"
+         data-link-monthly="https://buy.stripe.com/00w7sD8q3fgYeNW1JM1B60t"
+         data-link-full="https://buy.stripe.com/00w4grcGj3ygbBK9ce1B60s">
+      <span class="badge">★ Most Recommended</span>
+      <div class="pkg-name">Perfor&shy;mance</div>
+      <div class="pkg-sub">4 Gym + 2 Speed / Week</div>
+      <div class="price-block"><span class="price"><span class="cur">$</span><span class="amt">499</span></span><span class="per per-txt">/ mo</span></div>
+      <div class="alt-price alt-txt">or <b>$998</b> paid in full</div>
+      <ul class="feat">
+        <li><b>4</b> gym sessions / wk</li>
+        <li><b>2</b> speed sessions / wk</li>
+        <li><b>2</b> Specialty Lab credits / mo</li>
+        <li>Best balance of strength + speed transfer</li>
+      </ul>
+      <a class="cta" target="_blank" rel="noopener" href="https://buy.stripe.com/00w7sD8q3fgYeNW1JM1B60t">Enroll Now</a>
+    </div>
+
+    <!-- Elite Power -->
+    <div class="card"
+         data-monthly="62900" data-full="125800"
+         data-link-monthly="https://buy.stripe.com/14A4gr5dR5Go7lu7461B60v"
+         data-link-full="https://buy.stripe.com/4gMfZ97lZc4MaxG3RU1B60u">
+      <div class="pkg-name">Elite<br>Power</div>
+      <div class="pkg-sub">5 Gym + 2 Speed / Week</div>
+      <div class="price-block"><span class="price"><span class="cur">$</span><span class="amt">629</span></span><span class="per per-txt">/ mo</span></div>
+      <div class="alt-price alt-txt">or <b>$1,258</b> paid in full</div>
+      <ul class="feat">
+        <li><b>5</b> gym sessions / wk</li>
+        <li><b>2</b> speed sessions / wk</li>
+        <li><b>2</b> Specialty Lab credits / mo</li>
+        <li>For serious varsity, college &amp; pro athletes</li>
+      </ul>
+      <a class="cta" target="_blank" rel="noopener" href="https://buy.stripe.com/14A4gr5dR5Go7lu7461B60v">Enroll Now</a>
+    </div>
+  </div>
+
+  <footer>
+    <p class="fnote">Prices shown are <b>training only</b>. The <b>$40/mo morning fitness gym membership</b> is separate and paid directly to the gym.</p>
+    <p class="fnote">Paid-in-full covers the full 8-week summer block (two months of training). Monthly plans are billed each month for the duration of the program — cancel at the end of summer.</p>
+    <p class="fnote">Questions about which package fits your athlete? DM <b>@3ds_performance</b> on Instagram.</p>
+    <div class="pay-secure">
+      <svg viewBox="0 0 24 24"><path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4Zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8Z"/></svg>
+      Secure checkout powered by Stripe
+    </div>
+  </footer>
+</div>
+
+<script>
+  const toggle = document.getElementById('toggle');
+  const buttons = toggle.querySelectorAll('button');
+  const cards = document.querySelectorAll('.card');
+  const saveHint = document.getElementById('saveHint');
+
+  function fmt(cents){
+    return '$' + (cents/100).toLocaleString('en-US');
+  }
+
+  function setMode(mode){
+    toggle.classList.toggle('full', mode === 'full');
+    buttons.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+    saveHint.textContent = mode === 'monthly'
+      ? 'Billed monthly through the summer block.'
+      : 'One payment — covers the full 8-week summer.';
+
+    cards.forEach(card => {
+      const monthly = +card.dataset.monthly;
+      const full = +card.dataset.full;
+      const amtEl = card.querySelector('.amt');
+      const curEl = card.querySelector('.cur');
+      const perEl = card.querySelector('.per-txt');
+      const altEl = card.querySelector('.alt-txt');
+      const cta = card.querySelector('.cta');
+
+      if(mode === 'monthly'){
+        amtEl.textContent = (monthly/100).toLocaleString('en-US');
+        perEl.textContent = '/ mo';
+        perEl.style.display = '';
+        altEl.innerHTML = 'or <b>' + fmt(full) + '</b> paid in full';
+        cta.href = card.dataset.linkMonthly;
+      } else {
+        amtEl.textContent = (full/100).toLocaleString('en-US');
+        perEl.style.display = 'none';
+        altEl.innerHTML = 'full summer · or <b>' + fmt(monthly) + '/mo</b> monthly';
+        cta.href = card.dataset.linkFull;
+      }
+    });
+  }
+
+  buttons.forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+  setMode('monthly');
+</script>
+</body>
+</html>
