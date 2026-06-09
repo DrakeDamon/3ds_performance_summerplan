@@ -96,10 +96,10 @@ const FALLBACK: Data = {
 }
 
 const STATS = [
-  { n: '10+', label: 'Athletes sent to college' },
+  { n: '13+', label: 'Athletes sent to college' },
   { n: '5+', label: 'Power 5 athletes developed' },
-  { n: '2', label: 'Track athletes sent to state' },
-  { n: '2', label: 'Track records broken' },
+  { n: '4', label: 'Track athletes sent to state' },
+  { n: '5', label: 'Track records broken' },
 ]
 
 const fmt = (cents: number) => '$' + (cents / 100).toLocaleString('en-US')
@@ -241,8 +241,11 @@ function Hero() {
         professional athletes.
       </p>
 
-      <div className="mt-10 flex flex-wrap items-center gap-3" role="list">
-        {STATS.map((s, i) => (
+      <p className="mt-10 font-display text-sm italic uppercase tracking-wide text-muted-foreground">
+        2 year results
+      </p>
+      <div className="mt-3 flex flex-wrap items-center gap-3" role="list">
+        {STATS.map((s) => (
           <div
             key={s.label} role="listitem"
             className="skew-brand border-l-2 border-primary bg-card/60 px-5 py-3 backdrop-blur-sm"
@@ -253,7 +256,6 @@ function Hero() {
             </div>
           </div>
         ))}
-        <span className="font-display text-sm italic text-muted-foreground">Year one results</span>
       </div>
     </header>
   )
