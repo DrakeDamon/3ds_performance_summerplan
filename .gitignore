@@ -1,0 +1,26 @@
+# --- Secrets & data (NEVER commit) ---
+.env
+.env.*
+!.env.example
+*.db
+backend/analytics.db
+
+# --- Python ---
+.venv/
+backend/.venv/
+__pycache__/
+*.pyc
+
+# --- Node / Vite ---
+node_modules/
+frontend/node_modules/
+frontend/dist/
+dist/
+*.local
+
+# --- OS / editor / local tooling ---
+.DS_Store
+*.log
+.vscode/
+.idea/
+.claude/

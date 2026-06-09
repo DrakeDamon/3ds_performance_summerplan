@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 3DS Performance — shadcn token contract mapped to the brand palette.
+   Every shadcn / 21st.dev component reads these vars, so they all render
+   in the dark athletic theme automatically.
+     ink #0a0c12 · carbon #12151d · red #e11d2a · bone #f0f2f6 · steel #8b94a7
+   Signature: the -8deg forward slant from the logo, Archivo Black display. */
+
+@layer base {
+  :root {
+    --background: 223 30% 5%;          /* ink */
+    --foreground: 220 24% 95%;         /* bone */
+
+    --card: 223 24% 9%;                /* carbon */
+    --card-foreground: 220 24% 95%;
+    --popover: 223 24% 9%;
+    --popover-foreground: 220 24% 95%;
+
+    --primary: 356 76% 50%;            /* red */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 223 25% 13%;          /* carbon-2 */
+    --secondary-foreground: 220 24% 95%;
+
+    --muted: 223 20% 15%;
+    --muted-foreground: 220 14% 64%;   /* steel */
+
+    --accent: 356 76% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 223 16% 20%;             /* seam */
+    --input: 223 16% 22%;
+    --ring: 356 76% 50%;               /* red focus */
+
+    --radius: 0.875rem;                /* 14px */
+  }
+
+  * {
+    @apply border-border;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    overflow-x: hidden;
+  }
+  img {
+    display: block;
+  }
+}
+
+@layer components {
+  /* Fixed brand backdrop: red glow + faint skewed grid, carried from the
+     original design so the migrated page keeps its depth. */
+  .brand-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(1000px 500px at 85% -10%, rgba(225, 29, 42, 0.16), transparent 60%),
+      radial-gradient(800px 600px at -15% 105%, rgba(225, 29, 42, 0.08), transparent 55%),
+      hsl(var(--background));
+  }
+  .brand-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(98deg, rgba(255, 255, 255, 0.022) 0 1px, transparent 1px 64px);
+  }
+}
+
+@layer utilities {
+  /* The -8deg logo slant, available as a utility. */
+  .skew-brand {
+    transform: skewX(-8deg);
+  }
+  .unskew-brand {
+    transform: skewX(8deg);
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Entrance animation: transform ONLY (no opacity) so content is never
+     invisible if the animation is paused or never runs (backgrounded tab,
+     no-JS, reduced motion). Real users on a visible tab see the rise;
+     everyone else just sees the content in place. Stagger via inline
+     animation-delay. */
+  .rise-in {
+    animation: rise-in 0.55s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+  }
+}
+
+@keyframes rise-in {
+  from { transform: translateY(16px); }
+  to { transform: translateY(0); }
+}
+
+/* Respect users who ask for less motion: kill transitions/animations. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

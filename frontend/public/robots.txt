@@ -1,0 +1,5 @@
+# 3DS Performance — allow everything, point crawlers at the sitemap.
+User-agent: *
+Allow: /
+
+Sitemap: https://drakedamon.github.io/3ds_performance_summerplan/sitemap.xml

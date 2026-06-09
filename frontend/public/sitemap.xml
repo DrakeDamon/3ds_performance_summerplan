@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Single-page storefront. The in-page tabs (#programs, #dropins) are
+     client-side anchors, not separate crawlable URLs, so the sitemap
+     lists the one canonical page. Update lastmod when prices change. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://drakedamon.github.io/3ds_performance_summerplan/</loc>
+    <lastmod>2026-06-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>
