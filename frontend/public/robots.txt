@@ -2,4 +2,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://drakedamon.github.io/3ds_performance_summerplan/sitemap.xml
+Sitemap: https://3dsperformance.com/sitemap.xml

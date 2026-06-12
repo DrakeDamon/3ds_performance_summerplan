@@ -36,7 +36,7 @@ npm run dev                  # http://localhost:5173 (proxies /api -> :8000)
 
 **Frontend — GitHub Pages (live):** every push to `main` triggers
 `.github/workflows/deploy.yml`, which builds `frontend/` and publishes it to
-<https://drakedamon.github.io/3ds_performance_summerplan/>. On Pages the app
+<https://3dsperformance.com> (GitHub Pages custom domain; the old github.io URL redirects). On Pages the app
 runs in **static mode**: no backend calls; Enroll buttons go straight to the
 public Stripe Payment Links, so booking works with zero servers. Analytics
 (`/api/track`, `/api/stats`) are inactive in this mode.
