@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>Payment confirmed — 3DS Performance</title>
+<style>
+  :root { --ink:#0a0c12; --bone:#f0f2f6; --red:#e11d2a; --muted:#8892a4; --card:#13161f; --border:#2a2d3a; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { height:100%; }
+  body { background:var(--ink); color:var(--bone); font-family:'Archivo',system-ui,sans-serif;
+         display:flex; align-items:center; justify-content:center; padding:24px; text-align:center; }
+  .card { max-width:440px; width:100%; background:var(--card); border:1px solid var(--border);
+          border-radius:18px; padding:32px 26px; }
+  img.logo { height:34px; width:auto; margin-bottom:18px; }
+  .check { width:54px; height:54px; border-radius:50%; background:rgba(225,29,42,.12);
+           color:var(--red); display:flex; align-items:center; justify-content:center; margin:0 auto 14px; font-size:28px; }
+  h1 { font-size:22px; text-transform:uppercase; letter-spacing:.02em; font-style:italic; }
+  p { color:var(--muted); font-size:14px; line-height:1.55; margin-top:10px; }
+  .spin { margin:18px auto 0; width:26px; height:26px; border:3px solid var(--border);
+          border-top-color:var(--red); border-radius:50%; animation:s 0.8s linear infinite; }
+  @keyframes s { to { transform:rotate(360deg); } }
+  .btns { margin-top:20px; display:flex; flex-direction:column; gap:10px; }
+  a.btn { display:block; padding:13px 16px; border-radius:10px; font-weight:700; text-transform:uppercase;
+          letter-spacing:.04em; font-size:14px; text-decoration:none; }
+  a.primary { background:var(--red); color:#fff; }
+  a.ghost { border:1px solid var(--border); color:var(--bone); }
+  .fall { margin-top:16px; font-size:12px; }
+  .fall a { color:var(--red); }
+</style>
+</head>
+<body>
+  <div class="card">
+    <img class="logo" src="/logo-white.png" alt="3DS Performance" />
+    <div class="check">&#10003;</div>
+    <h1 id="head">Payment confirmed</h1>
+    <p id="sub">Setting up your booking…</p>
+    <div id="auto"><div class="spin"></div></div>
+    <div class="btns" id="choice" style="display:none">
+      <a class="btn primary" id="bSpeed" href="#">Book a Speed Session</a>
+      <a class="btn ghost" id="bGym" href="#">Book a Gym Session</a>
+    </div>
+    <p class="fall" id="fall" style="display:none"></p>
+  </div>
+<script>
+(function(){
+  var ACUITY_SPEED = 'https://app.acuityscheduling.com/schedule.php?owner=36021425&appointmentType=94339471';
+  var ACUITY_GYM   = 'https://app.acuityscheduling.com/schedule.php?owner=36021425&appointmentType=79407283';
+  var params = new URLSearchParams(location.search);
+  var type = (params.get('type') || 'program').toLowerCase();
+
+  // best-effort conversion beacon (never blocks the redirect)
+  try {
+    fetch('https://api.3dsperformance.com/lead', {
+      method:'POST', headers:{'Content-Type':'application/json'}, keepalive:true,
+      body: JSON.stringify({ interest:'paid', sport:type, path:'/booked.html', referrer:document.referrer||null,
+        visitor_id:(localStorage.getItem('3ds_vid')||null) })
+    }).catch(function(){});
+  } catch(e){}
+
+  function go(url){ window.location.replace(url); }
+  function showChoice(msg){
+    document.getElementById('auto').style.display='none';
+    document.getElementById('sub').textContent = msg;
+    document.getElementById('bSpeed').href = ACUITY_SPEED;
+    document.getElementById('bGym').href = ACUITY_GYM;
+    document.getElementById('choice').style.display='flex';
+  }
+  function showFallback(url){
+    document.getElementById('auto').style.display='none';
+    var f=document.getElementById('fall'); f.style.display='block';
+    f.innerHTML = 'Not redirected? <a href="'+url+'">Tap here to book</a>.';
+  }
+
+  if (type === 'speed') {
+    document.getElementById('sub').textContent = 'Sending you to booking — pick your speed session time.';
+    setTimeout(function(){ go(ACUITY_SPEED); }, 1200);
+    setTimeout(function(){ showFallback(ACUITY_SPEED); }, 3200);
+  } else if (type === 'gym') {
+    document.getElementById('sub').textContent = 'Sending you to booking — pick your gym session time.';
+    setTimeout(function(){ go(ACUITY_GYM); }, 1200);
+    setTimeout(function(){ showFallback(ACUITY_GYM); }, 3200);
+  } else {
+    // program / lab / unknown → let them choose which session type to book
+    document.getElementById('head').textContent = "You're in";
+    showChoice('Payment confirmed. Book your sessions below — see you in the gym.');
+  }
+})();
+</script>
+</body>
+</html>

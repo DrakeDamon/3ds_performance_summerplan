@@ -117,10 +117,16 @@ const API_BASE = RAW_API_BASE.replace(/\/$/, '')
    subpath in builds and at / in dev). */
 const asset = (p: string) => import.meta.env.BASE_URL + p
 
-/* Acuity booking links (private appointment types — share directly). The first
-   session is the $20/$40 tripwire: book it to see how we coach before enrolling. */
+/* Acuity booking. Athletes reach Acuity AFTER paying — via /booked.html, which
+   each Stripe Payment Link redirects to on completion (after_completion →
+   redirect). booked.html holds both type links; App only needs SPEED for the
+   post-signup "book a session" nudge in the lead form. No hand-sent links. */
 const ACUITY_SPEED = 'https://app.acuityscheduling.com/schedule.php?owner=36021425&appointmentType=94339471'
-const ACUITY_GYM = 'https://app.acuityscheduling.com/schedule.php?owner=36021425&appointmentType=79407283'
+
+/* Drop-in Stripe Payment Links — the Book section sends athletes HERE first (pay),
+   then Stripe redirects to /booked.html?type=… → Acuity. Mirror of FALLBACK.dropin. */
+const PAY_SPEED = 'https://buy.stripe.com/4gM00b49N7OwbBK88a1B60w' // $20 speed drop-in
+const PAY_GYM = 'https://buy.stripe.com/7sY6ozgWz5Go6hq7461B60x'   // $40 gym drop-in
 
 /* Owned lead list. Posts to a Cloudflare Worker → D1 (data lives in our own
    Cloudflare account, not a rented ESP). The form degrades gracefully if the
@@ -296,12 +302,12 @@ function GymGlassNote() {
 function BookingSection() {
   const cards = [
     {
-      name: 'Speed Session', price: '$20', href: ACUITY_SPEED,
+      name: 'Speed Session', price: '$20', href: PAY_SPEED,
       lines: ['Acceleration, max-velocity & sprint mechanics', 'Field work — no gym membership needed'],
       kind: 'book_speed',
     },
     {
-      name: 'Gym Session', price: '$40', href: ACUITY_GYM,
+      name: 'Gym Session', price: '$40', href: PAY_GYM,
       lines: ['Strength, power & force production', 'Train where college & pro athletes train'],
       kind: 'book_gym',
     },
@@ -311,7 +317,7 @@ function BookingSection() {
       <h2 className="font-display text-3xl uppercase tracking-tight md:text-4xl">Book your first session</h2>
       <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
         New here? Drop in for one session and see how we coach before you commit to a block.
-        Pick a time — we&apos;ll handle the rest.
+        Reserve your spot below — pay, then pick your time right after. We handle the rest.
       </p>
       <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
         {cards.map((c, i) => (
@@ -337,7 +343,7 @@ function BookingSection() {
               onClick={() => track(c.kind)}
               className="mt-6 inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-2.5 font-display text-sm uppercase tracking-wide text-primary-foreground transition-opacity hover:opacity-90"
             >
-              Book {c.name.split(' ')[0]} Session
+              Reserve {c.name.split(' ')[0]} — {c.price}
             </a>
           </article>
         ))}
