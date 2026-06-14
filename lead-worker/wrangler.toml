@@ -1,0 +1,12 @@
+name = "3ds-leads"
+main = "src/index.js"
+compatibility_date = "2026-06-01"
+workers_dev = true
+
+# Owned lead-capture backend for 3dsperformance.com.
+# Data lives in this Cloudflare account's D1 (SQLite) — not a rented ESP.
+# database_id is filled in by `wrangler d1 create` (committed; it is not a secret).
+[[d1_databases]]
+binding = "DB"
+database_name = "3ds_leads"
+database_id = "92f2d57f-a4b4-43e4-94b6-74e07330ebe7"

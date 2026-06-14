@@ -117,6 +117,17 @@ const API_BASE = RAW_API_BASE.replace(/\/$/, '')
    subpath in builds and at / in dev). */
 const asset = (p: string) => import.meta.env.BASE_URL + p
 
+/* Acuity booking links (private appointment types — share directly). The first
+   session is the $20/$40 tripwire: book it to see how we coach before enrolling. */
+const ACUITY_SPEED = 'https://app.acuityscheduling.com/schedule.php?owner=36021425&appointmentType=94339471'
+const ACUITY_GYM = 'https://app.acuityscheduling.com/schedule.php?owner=36021425&appointmentType=79407283'
+
+/* Owned lead list. Posts to a Cloudflare Worker → D1 (data lives in our own
+   Cloudflare account, not a rented ESP). The form degrades gracefully if the
+   endpoint is unreachable — it never dead-ends. Override via VITE_LEAD_ENDPOINT. */
+const LEAD_ENDPOINT =
+  (import.meta.env.VITE_LEAD_ENDPOINT as string | undefined) ?? 'https://api.3dsperformance.com/lead'
+
 /* ------------------------------------------------------- metadata capture */
 
 function visitorId(): string | null {
@@ -191,11 +202,12 @@ function fireConfetti(x: number, y: number) {
 
 /* ------------------------------------------------------------ components */
 
-function Nav({ onTab }: { onTab: (k: string) => void }) {
+function Nav() {
   const navItems: NavItem[] = [
+    { label: 'Book', onSelect: () => scrollToId('book') },
     { label: 'Programs', onSelect: () => scrollToId('programs') },
-    { label: 'Drop-Ins', onSelect: () => { onTab('dropin'); scrollToId('programs') } },
-    { label: 'Contact', href: 'https://www.instagram.com/3ds_performance/' },
+    { label: 'Coach', onSelect: () => scrollToId('coach') },
+    { label: 'Courses', onSelect: () => scrollToId('courses') },
   ]
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between gap-4 border-b border-border bg-background/80 px-4 py-3 backdrop-blur-md md:px-8">
@@ -207,10 +219,10 @@ function Nav({ onTab }: { onTab: (k: string) => void }) {
         <NavHeader items={navItems} />
       </div>
       <Button
-        onClick={() => scrollToId('programs')}
+        onClick={() => scrollToId('book')}
         className="font-display uppercase tracking-wide"
       >
-        Enroll
+        Book
       </Button>
     </nav>
   )
@@ -277,6 +289,215 @@ function GymGlassNote() {
         </GlassCardHeader>
       </GlassCard>
     </div>
+  )
+}
+
+/* ---- Booking: the $20/$40 first-session tripwire (Acuity scheduling) ---- */
+function BookingSection() {
+  const cards = [
+    {
+      name: 'Speed Session', price: '$20', href: ACUITY_SPEED,
+      lines: ['Acceleration, max-velocity & sprint mechanics', 'Field work — no gym membership needed'],
+      kind: 'book_speed',
+    },
+    {
+      name: 'Gym Session', price: '$40', href: ACUITY_GYM,
+      lines: ['Strength, power & force production', 'Train where college & pro athletes train'],
+      kind: 'book_gym',
+    },
+  ]
+  return (
+    <section id="book" className="mx-auto max-w-6xl px-4 md:px-8">
+      <h2 className="font-display text-3xl uppercase tracking-tight md:text-4xl">Book your first session</h2>
+      <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+        New here? Drop in for one session and see how we coach before you commit to a block.
+        Pick a time — we&apos;ll handle the rest.
+      </p>
+      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {cards.map((c, i) => (
+          <article
+            key={c.name}
+            style={{ animationDelay: `${i * 0.06}s` }}
+            className="rise-in flex flex-col rounded-2xl border border-border bg-card/80 p-6 backdrop-blur-sm"
+          >
+            <div className="flex items-baseline justify-between">
+              <h3 className="font-display text-xl uppercase tracking-tight">{c.name}</h3>
+              <span className="font-display text-2xl text-primary">{c.price}</span>
+            </div>
+            <ul className="mt-4 flex flex-col gap-2">
+              {c.lines.map((l) => (
+                <li key={l} className="flex items-start gap-2 text-sm">
+                  <Check className="mt-0.5 size-4 flex-shrink-0 text-primary" />
+                  <span>{l}</span>
+                </li>
+              ))}
+            </ul>
+            <a
+              href={c.href} target="_blank" rel="noopener noreferrer"
+              onClick={() => track(c.kind)}
+              className="mt-6 inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-2.5 font-display text-sm uppercase tracking-wide text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              Book {c.name.split(' ')[0]} Session
+            </a>
+          </article>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+/* ---- Coach: the human behind the standard (parents/decision-makers vet this) ---- */
+function CoachSection() {
+  return (
+    <section id="coach" className="mx-auto max-w-5xl px-4 md:px-8">
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-[260px_1fr] md:items-center">
+        <div className="rise-in mx-auto w-full max-w-[260px]">
+          <img
+            src={asset('coach.jpg')}
+            alt="Coach Drake Damon, 3DS Performance"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).src = asset('logo-white.png') }}
+            className="aspect-[4/5] w-full rounded-2xl border border-border bg-card/60 object-cover"
+          />
+        </div>
+        <div className="rise-in" style={{ animationDelay: '0.08s' }}>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">The coach</p>
+          <h2 className="mt-2 font-display text-3xl uppercase tracking-tight md:text-4xl">
+            Coached by Drake Damon
+          </h2>
+          <p className="mt-4 text-sm leading-relaxed text-muted-foreground md:text-base">
+            3DS isn&apos;t a class you get filed into. Every athlete is coached to a standard —
+            the same speed, strength &amp; biomechanics system that has sent 13+ athletes to
+            college, developed 5+ Power&nbsp;5 athletes, and put 4 on the state track stage with
+            5 records broken. Two years. One gym in Wesley Chapel.
+          </p>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground md:text-base">
+            The method is simple and it&apos;s why it transfers: speed is built from the ground
+            up — foot, hip, force. We measure it, we coach the mechanics, and we hold athletes to
+            what the next level actually demands.
+          </p>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ---- Reusable owned-list capture form (schedule + course waitlist) ---- */
+function LeadForm({
+  id, interest, heading, blurb, cta,
+}: {
+  id: string
+  interest: string
+  heading: string
+  blurb: string
+  cta: string
+}) {
+  const [state, setState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle')
+  const [form, setForm] = useState({ name: '', email: '', phone: '', sport: '' })
+  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm((f) => ({ ...f, [k]: e.target.value }))
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (state === 'sending') return
+    setState('sending')
+    track(`lead_${interest}`)
+    try {
+      const r = await fetch(LEAD_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...form,
+          interest,
+          path: location.pathname,
+          referrer: document.referrer || null,
+          visitor_id: visitorId(),
+          ...UTM,
+        }),
+      })
+      setState(r.ok ? 'done' : 'error')
+    } catch {
+      setState('error')
+    }
+  }
+
+  if (state === 'done') {
+    return (
+      <div className="rounded-2xl border border-primary/40 bg-card/80 p-6 text-center backdrop-blur-sm">
+        <Check className="mx-auto size-8 text-primary" />
+        <h3 className="mt-3 font-display text-xl uppercase tracking-tight">You&apos;re on the list</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          We&apos;ll send the schedule and details shortly. Want a spot now?{' '}
+          <a href={ACUITY_SPEED} target="_blank" rel="noopener noreferrer" className="text-primary underline">
+            Book a session
+          </a>.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <form id={id} onSubmit={submit} className="rounded-2xl border border-border bg-card/80 p-6 backdrop-blur-sm">
+      <h3 className="font-display text-2xl uppercase tracking-tight md:text-3xl">{heading}</h3>
+      <p className="mt-1 text-sm text-muted-foreground">{blurb}</p>
+      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <input
+          required value={form.name} onChange={set('name')} placeholder="Athlete or parent name"
+          className="rounded-md border border-border bg-background/60 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
+        />
+        <input
+          required type="email" value={form.email} onChange={set('email')} placeholder="Email"
+          className="rounded-md border border-border bg-background/60 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
+        />
+        <input
+          type="tel" value={form.phone} onChange={set('phone')} placeholder="Phone (for the schedule text)"
+          className="rounded-md border border-border bg-background/60 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
+        />
+        <input
+          value={form.sport} onChange={set('sport')} placeholder="Sport / level (e.g. HS WR, college 400m)"
+          className="rounded-md border border-border bg-background/60 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
+        />
+      </div>
+      <button
+        type="submit" disabled={state === 'sending'}
+        className="mt-4 w-full rounded-md bg-primary px-4 py-2.5 font-display text-sm uppercase tracking-wide text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+      >
+        {state === 'sending' ? 'Sending…' : cta}
+      </button>
+      {state === 'error' && (
+        <p className="mt-3 text-center text-sm text-muted-foreground">
+          Something glitched. DM <a href="https://www.instagram.com/3ds_performance/" target="_blank" rel="noopener noreferrer" className="text-primary underline">@3ds_performance</a> or{' '}
+          <a href={ACUITY_SPEED} target="_blank" rel="noopener noreferrer" className="text-primary underline">book a session</a> and we&apos;ll get you the schedule.
+        </p>
+      )}
+    </form>
+  )
+}
+
+/* ---- Course library teaser (own it — no TrainHeroic rev-share) ---- */
+function CoursesComingSoon() {
+  return (
+    <section id="courses" className="mx-auto max-w-3xl px-4 md:px-8">
+      <div className="rounded-2xl border border-border bg-card/60 p-6 text-center backdrop-blur-sm md:p-8">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">3DS Course Library</p>
+        <h2 className="mt-2 font-display text-3xl uppercase tracking-tight md:text-4xl">
+          Train with us from anywhere
+          <span className="ml-2 align-middle text-base text-muted-foreground">(coming soon)</span>
+        </h2>
+        <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">
+          The speed, strength &amp; biomechanics system — broken into on-demand courses you can run
+          on your own. Built and owned by 3DS. Join the list and you&apos;ll be first in when it drops.
+        </p>
+        <div className="mx-auto mt-6 max-w-xl text-left">
+          <LeadForm
+            id="courses-waitlist"
+            interest="courses"
+            heading="Get early access"
+            blurb="No spam — one note when the first course goes live."
+            cta="Join the waitlist"
+          />
+        </div>
+      </div>
+    </section>
   )
 }
 
@@ -472,11 +693,13 @@ export default function App() {
   return (
     <>
       <div className="brand-bg" aria-hidden="true" />
-      <Nav onTab={onTab} />
+      <Nav />
       {/* Block + space-y (not flex): children use mx-auto to center, which
           shrinks them to content width inside a flex column. */}
-      <main className="space-y-10 pb-4">
+      <main className="space-y-14 pb-4">
         <Hero />
+        <BookingSection />
+        <CoachSection />
         <GymGlassNote />
 
         <div className="mx-auto flex max-w-6xl flex-wrap justify-center gap-1 px-4 md:px-8" id="programs" role="tablist" aria-label="Programs">
@@ -500,6 +723,18 @@ export default function App() {
         </div>
 
         <ProgramSection groupKey={tab} group={data[tab]} onCheckout={onCheckout} />
+
+        <div className="mx-auto max-w-3xl px-4 md:px-8">
+          <LeadForm
+            id="schedule"
+            interest="schedule"
+            heading="Get the Summer Schedule"
+            blurb="Full session times, pricing, and how enrollment works — sent straight to you."
+            cta="Send me the schedule"
+          />
+        </div>
+
+        <CoursesComingSoon />
       </main>
       <MinimalFooter />
     </>
